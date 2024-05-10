@@ -74,6 +74,10 @@ app.get('/receipt', (req, res) => {
        async function pollForFile() {
           const response = await fetch(window.location.href);
           
+          if(response.headers.get('Retry-After')) {
+              return false;
+          }
+          
           const contentDisposition = response.headers.get('Content-Disposition');
           
           if(contentDisposition && contentDisposition.includes('attachment')) {
