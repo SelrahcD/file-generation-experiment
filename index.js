@@ -48,7 +48,7 @@ app.get('/receipt', (req, res) => {
       </body>
       <script>
 
-      async function retryWithDelay(taskFn, maxRetries = 5) {
+      async function fetchWithRetryAfter(taskFn, maxRetries = 5) {
         let attempt = 0;
         let delayMs = 0;
     
@@ -106,7 +106,7 @@ app.get('/receipt', (req, res) => {
               };
       }
     
-    retryWithDelay(() => pollForFile(window.location.href), 10)
+    fetchWithRetryAfter(() => pollForFile(window.location.href), 10)
         .then(result => console.log(result))
         .catch(error => console.error(error.message));
        
