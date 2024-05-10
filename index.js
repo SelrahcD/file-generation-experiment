@@ -44,19 +44,7 @@ app.get('/receipt', (req, res) => {
   `;
             res.send(htmlContent);
         } else { // File exists
-            const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <title>File Download</title>
-      </head>
-      <body>
-        <h1>File download</h1>
-        <p>Here is your receipt</p>
-      </body>
-    </html>
-  `;
-            res.send(htmlContent);
+            res.redirect('/download');
         }
     });
 
@@ -70,7 +58,7 @@ app.get('/download', (req, res) => {
             console.error(`Error during download: ${err}`);
             res.status(500).send('Error downloading the file.');
         } else {
-            console.log(`File downloaded: ${file}`);
+            console.log(`File downloaded: ${filePath}`);
         }
     });
 });
