@@ -53,7 +53,6 @@ app.get('/receipt', (req, res) => {
         let delayMs = 0;
     
         while (attempt < maxRetries) {
-            console.log('Attempt');
             // Attempt to run the task function
             const result = await taskFn();
             
@@ -85,8 +84,6 @@ app.get('/receipt', (req, res) => {
           const contentDisposition = response.headers.get('Content-Disposition');
           
           if(contentDisposition && contentDisposition.includes('attachment')) {
-           console.log('The content is marked for attachment download.');
-
             // Extract filename (if any) from Content-Disposition
             const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
             const filename = filenameMatch ? filenameMatch[1] : 'default-filename';
@@ -109,7 +106,7 @@ app.get('/receipt', (req, res) => {
               };
       }
     
-    retryWithDelay(pollForFile, 10, 5000)
+    retryWithDelay(pollForFile, 10)
         .then(result => console.log(result))
         .catch(error => console.error(error.message));
        
