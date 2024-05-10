@@ -48,38 +48,30 @@ app.get('/receipt', (req, res) => {
       </body>
       <script>
 
-      async function fetchWithRetryAfter(taskFn, maxRetries = 5) {
+      async function fetchWithRetryAfter(fetch, maxRetries = 5) {
         let attempt = 0;
-        let delayMs = 0;
+        let response;
     
         while (attempt < maxRetries) {
-            // Attempt to run the task function
-            const result = await taskFn();
-            
             attempt++;
-            if (attempt >= maxRetries) {
-                throw new Error('Max attempts')
+            
+            response = await fetch();
+            
+            if(response.headers.get('Retry-After')) {
+              let delayMs = response.headers.get('Retry-After') * 1000;
+              await new Promise(resolve => setTimeout(resolve, delayMs));
+              continue;
             }
             
-            if(result.type !== 'retry-after') {
-               return result.value;
-            }
-            
-            delayMs = result.value * 1000;
-            await new Promise(resolve => setTimeout(resolve, delayMs));
+            return response;
         }
+        
+         return response;
     }
     
         // Function to perform a GET request to the current page
        async function myFetch(url) {
           const response = await fetch(url);
-          
-          if(response.headers.get('Retry-After')) {
-              return {
-                type: 'retry-after',
-                value: response.headers.get('Retry-After')
-              };
-          }
           
           const contentDisposition = response.headers.get('Content-Disposition');
           
@@ -100,10 +92,7 @@ app.get('/receipt', (req, res) => {
             window.URL.revokeObjectURL(downloadUrl);
           }
           
-          return {
-                type: 'success',
-                value: true
-              };
+          return response;
       }
     
     fetchWithRetryAfter(() => myFetch(window.location.href), 10)
