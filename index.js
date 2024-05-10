@@ -16,8 +16,8 @@ app.get('/', (req, res) => {
         .spinner {
             display: none;
             border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             border-left-color: #09f;
             animation: spin 1s linear infinite;
@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
       <body>
         <h1>Your form was submitted !</h1>
         <p>Thank you for your information.</p>
-        <a href="/receipt" id="downloadLink">Get your receipt</a><div class="spinner" id="spinner"></div>
+        <a href="/receipt" id="downloadLink">Get your receipt<div class="spinner" id="spinner" /></a>
       </body>
       <script>
       
@@ -48,7 +48,7 @@ app.get('/', (req, res) => {
           event.preventDefault();
           
           const spinner = document.getElementById('spinner');
-          spinner.style.display = 'block';
+          spinner.style.display = 'inline-block';
           
         fetchWithRetryAfter(() => fetchDownloadAttachment(fetch(this.getAttribute('href'))), 10)
         .then(() => {
