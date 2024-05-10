@@ -68,7 +68,6 @@ app.get('/', (req, res) => {
             response = await fetch();
             
             if(response.headers.get('Retry-After')) {
-                console.log('RETRY AFTER')
               let delayMs = response.headers.get('Retry-After') * 1000;
               await new Promise(resolve => setTimeout(resolve, delayMs));
               continue;
