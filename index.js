@@ -70,8 +70,8 @@ app.get('/receipt', (req, res) => {
     }
     
         // Function to perform a GET request to the current page
-       async function myFetch(url) {
-          const response = await fetch(url);
+       async function fetchDownloadAttachment(fetch) {
+          const response = await fetch;
           
           const contentDisposition = response.headers.get('Content-Disposition');
           
@@ -95,7 +95,7 @@ app.get('/receipt', (req, res) => {
           return response;
       }
     
-    fetchWithRetryAfter(() => myFetch(window.location.href), 10)
+    fetchWithRetryAfter(() => fetchDownloadAttachment(fetch(window.location.href)), 10)
         .then(result => console.log(result))
         .catch(error => console.error(error.message));
        
