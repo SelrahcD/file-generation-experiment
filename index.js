@@ -40,23 +40,26 @@ app.get('/', (req, res) => {
       <body>
         <h1>Your form was submitted !</h1>
         <p>Thank you for your information.</p>
-        <a href="/receipt" id="downloadLink">Get your receipt<div class="spinner" id="spinner" /></a>
+        <a href="/receipt" class="download">Get your receipt<div class="spinner" id="spinner" /></a>
       </body>
       <script>
       
-      document.getElementById('downloadLink').addEventListener('click', function(event) {
-          event.preventDefault();
-          
-          const spinner = document.getElementById('spinner');
-          spinner.style.display = 'inline-block';
-          
-        fetchWithRetryAfter(() => fetchDownloadAttachment(fetch(this.getAttribute('href'))), 10)
-        .then(() => {
-            spinner.style.display = 'none'
-        })
-        .catch(error => console.error(error))
-        
-      })
+      const downloadLinks = document.getElementsByClassName('download');
+      
+      for(let downloadLink of downloadLinks) {
+          downloadLink.addEventListener('click', function(event) {
+              event.preventDefault();
+              
+              const spinner = document.getElementById('spinner');
+              spinner.style.display = 'inline-block';
+              
+            fetchWithRetryAfter(() => fetchDownloadAttachment(fetch(this.getAttribute('href'))), 10)
+            .then(() => {
+                spinner.style.display = 'none'
+            })
+            .catch(error => console.error(error))
+          })
+      }
 
       async function fetchWithRetryAfter(fetch, maxRetries = 5) {
         let attempt = 0;
