@@ -71,8 +71,8 @@ app.get('/receipt', (req, res) => {
     }
     
         // Function to perform a GET request to the current page
-       async function pollForFile() {
-          const response = await fetch(window.location.href);
+       async function pollForFile(url) {
+          const response = await fetch(url);
           
           if(response.headers.get('Retry-After')) {
               return {
@@ -106,7 +106,7 @@ app.get('/receipt', (req, res) => {
               };
       }
     
-    retryWithDelay(pollForFile, 10)
+    retryWithDelay(() => pollForFile(window.location.href), 10)
         .then(result => console.log(result))
         .catch(error => console.error(error.message));
        
