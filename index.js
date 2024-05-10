@@ -12,12 +12,101 @@ app.get('/', (req, res) => {
     <html lang="en">
       <head>
         <title>Form submitted</title>
+        <style>
+        .spinner {
+            display: none;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
       </head>
       <body>
         <h1>Your form was submitted !</h1>
         <p>Thank you for your information.</p>
-        <a href="/receipt">Get your receipt</a>
+        <a href="/receipt" id="downloadLink">Get your receipt</a><div class="spinner" id="spinner"></div>
       </body>
+      <script>
+      
+      document.getElementById('downloadLink').addEventListener('click', function(event) {
+          event.preventDefault();
+          
+          const spinner = document.getElementById('spinner');
+          spinner.style.display = 'block';
+          
+        fetchWithRetryAfter(() => fetchDownloadAttachment(fetch('/receipt')), 10)
+        .then(() => {
+            spinner.style.display = 'none'
+        })
+        .catch(error => console.error(error))
+        
+      })
+
+      async function fetchWithRetryAfter(fetch, maxRetries = 5) {
+        let attempt = 0;
+        let response;
+    
+        while (attempt < maxRetries) {
+            attempt++;
+            
+            response = await fetch();
+            
+            if(response.headers.get('Retry-After')) {
+                console.log('RETRY AFTER')
+              let delayMs = response.headers.get('Retry-After') * 1000;
+              await new Promise(resolve => setTimeout(resolve, delayMs));
+              continue;
+            }
+            
+            return response;
+        }
+        
+         return response;
+    }
+    
+        // Function to perform a GET request to the current page
+       async function fetchDownloadAttachment(fetch) {
+          const response = await fetch;
+          
+          const contentDisposition = response.headers.get('Content-Disposition');
+          
+          if(contentDisposition && contentDisposition.includes('attachment')) {
+            // Extract filename (if any) from Content-Disposition
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            const filename = filenameMatch ? filenameMatch[1] : 'default-filename';
+
+            // Process the response as a Blob and initiate the download
+            const data = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+          }
+          
+          return response;
+      }
+      
+      </script>
     </html>
   `;
     res.send(htmlContent);
@@ -102,7 +191,7 @@ app.get('/receipt', (req, res) => {
       </script>
     </html>
   `;
-        res.header('Retry-After', 5);
+        res.header('Retry-After', 1);
         res.send(htmlContent);
 
     });
