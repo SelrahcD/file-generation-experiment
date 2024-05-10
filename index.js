@@ -6,6 +6,7 @@ const port = 3000;
 
 const filePath = './files/receipt.txt';
 
+// tag::alllogic[]
 app.get('/', (req, res) => {
     const htmlContent = `
     <!DOCTYPE html>
@@ -27,8 +28,13 @@ app.get('/receipt', (req, res) => {
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
 
-        if (err) { // File doesn't exist yet
-            const htmlContent = `
+        if (!err) { // File exists
+            res.redirect('/download');
+            return;
+        }
+
+        // File doesn't exist yet
+        const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -42,13 +48,8 @@ app.get('/receipt', (req, res) => {
       </body>
     </html>
   `;
-            res.send(htmlContent);
-        } else { // File exists
-            res.redirect('/download');
-        }
+        res.send(htmlContent);
     });
-
-
 });
 
 app.get('/download', (req, res) => {
@@ -62,6 +63,7 @@ app.get('/download', (req, res) => {
         }
     });
 });
+// end::alllogic[]
 
 app.listen(port, () => {
     console.log(`Server is listening at http://localhost:${port}`);
