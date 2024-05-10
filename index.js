@@ -97,10 +97,9 @@ app.get('/receipt', (req, res) => {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(downloadUrl);
-            return true;
           }
           
-          return false;
+          return true;
       }
     
     retryWithDelay(pollForFile, 10, 5000)
