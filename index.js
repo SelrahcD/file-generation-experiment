@@ -106,7 +106,9 @@ app.get('/receipt', (req, res) => {
       </script>
     </html>
   `;
+        res.header('Retry-After', 5);
         res.send(htmlContent);
+
     });
 });
 // end::receipt[]
