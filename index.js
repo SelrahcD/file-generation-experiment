@@ -63,6 +63,18 @@ app.get('/receipt', (req, res) => {
 
 });
 
+app.get('/download', (req, res) => {
+
+    res.download(filePath, (err) => {
+        if (err) {
+            console.error(`Error during download: ${err}`);
+            res.status(500).send('Error downloading the file.');
+        } else {
+            console.log(`File downloaded: ${file}`);
+        }
+    });
+});
+
 app.listen(port, () => {
     console.log(`Server is listening at http://localhost:${port}`);
 });
