@@ -16,14 +16,14 @@ app.get('/', (req, res) => {
       <body>
         <h1>Your form was submitted !</h1>
         <p>Thank you for your information.</p>
-        <a href="/download">Get your receipt</a>
+        <a href="/receipt">Get your receipt</a>
       </body>
     </html>
   `;
     res.send(htmlContent);
 })
 
-app.get('/download', (req, res) => {
+app.get('/receipt', (req, res) => {
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
 
@@ -38,7 +38,7 @@ app.get('/download', (req, res) => {
         <h1>File download</h1>
         <p>We are creating your file.</p>
         <p>Please wait 5 seconds and click the download link below:</p>
-        <a href="/download">Download</a>
+        <a href="/receipt">Download</a>
       </body>
     </html>
   `;
