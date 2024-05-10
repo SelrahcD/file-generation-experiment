@@ -6,7 +6,6 @@ const port = 3000;
 
 const filePath = './files/receipt.txt';
 
-// tag::alllogic[]
 app.get('/', (req, res) => {
     const htmlContent = `
     <!DOCTYPE html>
@@ -24,6 +23,7 @@ app.get('/', (req, res) => {
     res.send(htmlContent);
 })
 
+// tag::receipt[]
 app.get('/receipt', (req, res) => {
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
@@ -39,6 +39,7 @@ app.get('/receipt', (req, res) => {
     <html lang="en">
       <head>
         <title>File Download</title>
+        <meta http-equiv="refresh" content="5">
       </head>
       <body>
         <h1>File download</h1>
@@ -51,6 +52,7 @@ app.get('/receipt', (req, res) => {
         res.send(htmlContent);
     });
 });
+// end::receipt[]
 
 app.get('/download', (req, res) => {
 
@@ -63,7 +65,6 @@ app.get('/download', (req, res) => {
         }
     });
 });
-// end::alllogic[]
 
 app.listen(port, () => {
     console.log(`Server is listening at http://localhost:${port}`);
