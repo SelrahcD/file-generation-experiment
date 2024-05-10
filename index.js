@@ -5,7 +5,7 @@ const app = express();
 const port = 3000;
 
 const filePath = './files/receipt.txt';
-
+// tag::confirmation[]
 app.get('/', (req, res) => {
     const htmlContent = `
     <!DOCTYPE html>
@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
       <body>
         <h1>Your form was submitted !</h1>
         <p>Thank you for your information.</p>
-        <a href="/receipt" class="download">Get your receipt<div class="spinner" id="spinner" /></a>
+        <a href="/receipt" class="download">Get your receipt<div class="spinner"></div></a>
       </body>
       <script>
       
@@ -50,10 +50,10 @@ app.get('/', (req, res) => {
           downloadLink.addEventListener('click', function(event) {
               event.preventDefault();
               
-              const spinner = document.getElementById('spinner');
+              const spinner = event.currentTarget.querySelector('.spinner');
               spinner.style.display = 'inline-block';
               
-            fetchWithRetryAfter(() => fetchDownloadAttachment(fetch(this.getAttribute('href'))), 10)
+              fetchWithRetryAfter(() => fetchDownloadAttachment(fetch(this.getAttribute('href'))), 10)
             .then(() => {
                 spinner.style.display = 'none'
             })
@@ -113,6 +113,7 @@ app.get('/', (req, res) => {
   `;
     res.send(htmlContent);
 })
+// end::confirmation[]
 
 // tag::receipt[]
 app.get('/receipt', (req, res) => {
