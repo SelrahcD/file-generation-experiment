@@ -50,7 +50,7 @@ app.get('/', (req, res) => {
           const spinner = document.getElementById('spinner');
           spinner.style.display = 'block';
           
-        fetchWithRetryAfter(() => fetchDownloadAttachment(fetch('/receipt')), 10)
+        fetchWithRetryAfter(() => fetchDownloadAttachment(fetch(this.getAttribute('href'))), 10)
         .then(() => {
             spinner.style.display = 'none'
         })
