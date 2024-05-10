@@ -48,24 +48,25 @@ app.get('/receipt', (req, res) => {
       </body>
       <script>
 
-      async function retryWithDelay(taskFn, maxRetries = 5, delayMs = 2000) {
+      async function retryWithDelay(taskFn, maxRetries = 5) {
         let attempt = 0;
+        let delayMs = 0;
     
         while (attempt < maxRetries) {
             console.log('Attempt');
             // Attempt to run the task function
             const result = await taskFn();
             
-            if(result) {
-                 return result;
-            }
-
             attempt++;
             if (attempt >= maxRetries) {
                 throw new Error('Max attempts')
             }
-
-            // Log the failure and delay before the next attempt
+            
+            if(result.type !== 'retry-after') {
+               return result.value;
+            }
+            
+            delayMs = result.value * 1000;
             await new Promise(resolve => setTimeout(resolve, delayMs));
         }
     }
@@ -75,7 +76,10 @@ app.get('/receipt', (req, res) => {
           const response = await fetch(window.location.href);
           
           if(response.headers.get('Retry-After')) {
-              return false;
+              return {
+                type: 'retry-after',
+                value: response.headers.get('Retry-After')
+              };
           }
           
           const contentDisposition = response.headers.get('Content-Disposition');
@@ -99,7 +103,10 @@ app.get('/receipt', (req, res) => {
             window.URL.revokeObjectURL(downloadUrl);
           }
           
-          return true;
+          return {
+                type: 'success',
+                value: true
+              };
       }
     
     retryWithDelay(pollForFile, 10, 5000)
