@@ -1,7 +1,10 @@
 // index.js
+const fs = require('fs');
 const express = require('express');
 const app = express();
 const port = 3000;
+
+const filePath = './files/receipt.txt';
 
 app.get('/', (req, res) => {
     const htmlContent = `
@@ -21,7 +24,11 @@ app.get('/', (req, res) => {
 })
 
 app.get('/download', (req, res) => {
-    const htmlContent = `
+
+    fs.access(filePath, fs.constants.F_OK, (err) => {
+
+        if (err) { // File doesn't exist yet
+            const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -35,7 +42,25 @@ app.get('/download', (req, res) => {
       </body>
     </html>
   `;
-    res.send(htmlContent);
+            res.send(htmlContent);
+        } else { // File exists
+            const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <title>File Download</title>
+      </head>
+      <body>
+        <h1>File download</h1>
+        <p>Here is your receipt</p>
+      </body>
+    </html>
+  `;
+            res.send(htmlContent);
+        }
+    });
+
+
 });
 
 app.listen(port, () => {

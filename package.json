@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "create-receipt": "echo 'Here is your receipt' > ./files/receipt.txt",
+    "clean-receipt": "rm ./files/receipt.txt"
   },
   "keywords": [],
   "author": "",
