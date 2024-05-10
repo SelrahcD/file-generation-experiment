@@ -47,6 +47,29 @@ app.get('/receipt', (req, res) => {
         <a href="/receipt">Download</a>
       </body>
       <script>
+
+      async function retryWithDelay(taskFn, maxRetries = 5, delayMs = 2000) {
+        let attempt = 0;
+    
+        while (attempt < maxRetries) {
+            console.log('Attempt');
+            // Attempt to run the task function
+            const result = await taskFn();
+            
+            if(result) {
+                 return result;
+            }
+
+            attempt++;
+            if (attempt >= maxRetries) {
+                throw new Error('Max attempts')
+            }
+
+            // Log the failure and delay before the next attempt
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+    }
+    
         // Function to perform a GET request to the current page
        async function pollForFile() {
           const response = await fetch(window.location.href);
@@ -70,11 +93,16 @@ app.get('/receipt', (req, res) => {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(downloadUrl);
+            return true;
           }
+          
+          return false;
       }
     
-        // Set up an interval to call the function every 5 seconds (5000 ms)
-        setInterval(pollForFile, 2000);
+    retryWithDelay(pollForFile, 10, 5000)
+        .then(result => console.log(result))
+        .catch(error => console.error(error.message));
+       
       </script>
     </html>
   `;
