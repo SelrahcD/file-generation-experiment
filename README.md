@@ -98,6 +98,25 @@ git checkout human-polling
 **This iteration is super raw but really helps understand how this works as it requires the user to manually ask (and ask again, if needed) for the file.**
 Future iterations are just UX improvements on top of it.
 
+```mermaid
+---
+title: The waiting for the file to be ready flow
+---
+stateDiagram-v2
+    state "Confirmation page" as confirmation
+    state "Waiting page" as waiting
+    state receiptController <<choice>>
+    state "File" as file
+    
+    [*] --> confirmation : The user submits the form
+    confirmation --> receiptController : The user clicks on the "Download receipt" link
+    waiting --> receiptController: The user clicks on the "Download receipt" link
+    receiptController --> waiting : if file is not ready
+    receiptController --> file : if file is ready
+    file --> [*]
+    note right of receiptController: The check is done by the controller at the /receipt route
+```
+
 The confirmation page now displays a download link to the `/receipt` route.
 The `/receipt` route controller acts as a traffic cop.
 If the file is available, it will redirect to the real file download URL.
@@ -135,15 +154,34 @@ git checkout blinking-polling
 
 The next improvement introduced is to avoid the need for the user to click on the second link on the waiting page.
 
+```mermaid
+---
+title: The waiting for the file to be ready flow
+---
+stateDiagram-v2
+    state "Confirmation page" as confirmation
+    state "Waiting page" as waiting
+    state receiptController <<choice>>
+    state "File" as file
+
+    [*] --> confirmation : The user submits the form
+    confirmation --> receiptController : The user clicks on the "Download receipt" link
+    waiting --> receiptController: ⏱️ Reload the page every N seconds
+    receiptController --> waiting : if file is not ready
+    receiptController --> file : if file is ready
+    file --> [*]
+    note right of receiptController: The check is done by the controller at the /receipt route
+    %%{init:{'themeCSS':'.edgeLabel:nth-of-type(3) { stroke: green; stroke-width: 3; }'}}%%
+```
+
 The simplest solution is to reload the waiting page every N seconds, which is what the user was manually doing by clicking on the link.
 Once the file is ready, the download starts.
 
 This is achieved by using a meta tag to the header: 
-```html
-<meta http-equiv="refresh" content="5">
-```
+
 
 Still no JS.
+
 
 #### 💡 An information for the HTTP client
 
