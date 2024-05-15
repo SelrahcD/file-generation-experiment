@@ -99,25 +99,6 @@ git checkout human-polling
 Future iterations are just UX improvements on top of it.
 
 ```mermaid
----
-title: The waiting for the file to be ready flow with human polling
----
-stateDiagram-v2
-    state "Confirmation page" as confirmation
-    state "Waiting page" as waiting
-    state receiptController <<choice>>
-    state "File" as file
-    
-    [*] --> confirmation : The user submits the form
-    confirmation --> receiptController : The user clicks on the "Download receipt" link
-    waiting --> receiptController: The user clicks on the "Download receipt" link
-    receiptController --> waiting : if file is not ready
-    receiptController --> file : if file is ready
-    file --> [*]
-    note right of receiptController: The check is done by the controller at the /receipt route
-```
-
-```mermaid
 sequenceDiagram
 actor User
 participant confirmation_page as Confirmation page
@@ -175,24 +156,6 @@ git checkout blinking-polling
 
 The next improvement introduced is to avoid the need for the user to click on the second link on the waiting page.
 
-```mermaid
----
-title: The waiting for the file to be ready flow with waiting page reloading 
----
-stateDiagram-v2
-    state "Confirmation page" as confirmation
-    state "Waiting page" as waiting
-    state receiptController <<choice>>
-    state "File" as file
-
-    [*] --> confirmation : The user submits the form
-    confirmation --> receiptController : The user clicks on the "Download receipt" link
-    waiting --> receiptController: ⏱️ Reload the page every N seconds
-    receiptController --> waiting : if file is not ready
-    receiptController --> file : if file is ready
-    file --> [*]
-    %%{init:{'themeCSS':'.edgeLabel:nth-of-type(3) { stroke: green; stroke-width: 3; }'}}%%
-```
 
 ```mermaid
 sequenceDiagram
@@ -249,36 +212,6 @@ git checkout server-retry-after
 
 The next improvement is to poll the server to see if the file has been created without reloading the page.
 Now is the time for JS to come into play.
-
-```mermaid
----
-title: The waiting for the file to be ready flow with JS
----
-stateDiagram-v2
-    state "Confirmation page" as confirmation
-    state "Waiting page" as waiting
-    state receiptController <<choice>>
-    state "File" as file
-
-    [*] --> confirmation : The user submits the form
-    confirmation --> receiptController : The user clicks on the "Download receipt" link
-    receiptController --> waiting : if file is not ready
-    receiptController --> file : if file is ready
-    state waiting {
-        state if_ready <<choice>>
-
-        state "Poll and wait" as wait
-        state "Download file" as download
-        [*] --> wait
-        wait --> if_ready
-        if_ready --> wait : Got a response with "Retry-After"
-        if_ready --> download : Got a response with 'Content-Disposition attachment'
-        download --> [*]
-    }
-    waiting --> receiptController: ⏱️ Checks every N seconds to see if file is ready
-    file --> [*]
-    %%{init:{'themeCSS':'#waiting .outer {stroke: green !important; stroke-width: 3 !important; } #waiting .inner {stroke: green !important; stroke-width: 3 !important; }'}}%%
-```
 
 ```mermaid
 sequenceDiagram
@@ -452,24 +385,3 @@ If you’re working in a server-to-server mode, you could also use a webhook mec
 ## Resources
 
 [📺 Avoiding long running HTTP API requests. - Code Opinion](https://www.youtube.com/watch?v=2yUnY61zdAk)
-
-
-
-sequenceDiagram
-actor User
-participant confirmation_page as Confirmation page
-participant waiting_page as Waiting page
-participant receipt_controller as Receipt controller
-participant file_download_controller as File download controller
-User->>confirmation_page: 👇 Click on "Download the file"
-confirmation_page->>receipt_controller: GET
-alt File doesn't exists
-loop
-receipt_controller-->>waiting_page: Returns
-waiting_page-->>User: Display "Wait a few seconds and click that link to get the file"
-User->>receipt_controller: 👇 Click the link
-end
-else File already exists
-confirmation_page->>file_download_controller: Redirects to [with Location header]
-file_download_controller-->>User : 📄 File
-end
