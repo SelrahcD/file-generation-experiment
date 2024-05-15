@@ -100,7 +100,7 @@ Future iterations are just UX improvements on top of it.
 
 ```mermaid
 ---
-title: The waiting for the file to be ready flow
+title: The waiting for the file to be ready flow with human polling
 ---
 stateDiagram-v2
     state "Confirmation page" as confirmation
@@ -115,6 +115,27 @@ stateDiagram-v2
     receiptController --> file : if file is ready
     file --> [*]
     note right of receiptController: The check is done by the controller at the /receipt route
+```
+
+```mermaid
+sequenceDiagram
+actor User
+participant confirmation_page as Confirmation page
+participant waiting_page as Waiting page
+participant receipt_controller as Receipt controller
+participant file_download_controller as File download controller
+confirmation_page-->>User: 👁️ Display "Download the file" link
+User->>receipt_controller: 👇 Click on "Download the file" [GET]
+loop
+    alt File doesn't exist
+        receipt_controller-->>waiting_page: returns
+        waiting_page-->>User: 👁️ Display "Wait a few seconds and click that link to get the file"
+        User->>receipt_controller: 👇 Click the link [GET]
+    else File exists
+        receipt_controller->>file_download_controller: Redirects to [with Location header]
+        file_download_controller-->>User : 📄 File
+    end
+end
 ```
 
 The confirmation page now displays a download link to the `/receipt` route.
@@ -156,7 +177,7 @@ The next improvement introduced is to avoid the need for the user to click on th
 
 ```mermaid
 ---
-title: The waiting for the file to be ready flow
+title: The waiting for the file to be ready flow with waiting page reloading 
 ---
 stateDiagram-v2
     state "Confirmation page" as confirmation
@@ -170,15 +191,42 @@ stateDiagram-v2
     receiptController --> waiting : if file is not ready
     receiptController --> file : if file is ready
     file --> [*]
-    note right of receiptController: The check is done by the controller at the /receipt route
     %%{init:{'themeCSS':'.edgeLabel:nth-of-type(3) { stroke: green; stroke-width: 3; }'}}%%
 ```
 
+```mermaid
+sequenceDiagram
+    actor User
+    participant confirmation_page as Confirmation page
+    participant waiting_page as Waiting page
+    participant receipt_controller as Receipt controller
+    participant file_download_controller as File download controller
+    confirmation_page-->>User: 👁️ Display "Download the file" link
+    User->>receipt_controller: 👇 Click on "Download the file" [GET]
+    loop
+        alt File doesn't exist
+            receipt_controller-->>waiting_page: returns
+            waiting_page-->>User: 👁️ Display "Wait a few seconds and click that link to get the file"
+            rect rgba(172, 226, 225, 0.4)
+                activate waiting_page
+                waiting_page->>waiting_page: ⏱️ Wait for the delay specified in refresh meta
+                waiting_page->>receipt_controller: GET
+                deactivate waiting_page
+            end
+        else File exists
+            receipt_controller->>file_download_controller: Redirects to [with Location header]
+            file_download_controller-->>User : 📄 File
+        end
+    end
+```
 The simplest solution is to reload the waiting page every N seconds, which is what the user was manually doing by clicking on the link.
 Once the file is ready, the download starts.
 
 This is achieved by using a meta tag to the header: 
 
+```html
+<meta http-equiv="refresh" content="5">
+```
 
 Still no JS.
 
@@ -201,6 +249,71 @@ git checkout server-retry-after
 
 The next improvement is to poll the server to see if the file has been created without reloading the page.
 Now is the time for JS to come into play.
+
+```mermaid
+---
+title: The waiting for the file to be ready flow with JS
+---
+stateDiagram-v2
+    state "Confirmation page" as confirmation
+    state "Waiting page" as waiting
+    state receiptController <<choice>>
+    state "File" as file
+
+    [*] --> confirmation : The user submits the form
+    confirmation --> receiptController : The user clicks on the "Download receipt" link
+    receiptController --> waiting : if file is not ready
+    receiptController --> file : if file is ready
+    state waiting {
+        state if_ready <<choice>>
+
+        state "Poll and wait" as wait
+        state "Download file" as download
+        [*] --> wait
+        wait --> if_ready
+        if_ready --> wait : Got a response with "Retry-After"
+        if_ready --> download : Got a response with 'Content-Disposition attachment'
+        download --> [*]
+    }
+    waiting --> receiptController: ⏱️ Checks every N seconds to see if file is ready
+    file --> [*]
+    %%{init:{'themeCSS':'#waiting .outer {stroke: green !important; stroke-width: 3 !important; } #waiting .inner {stroke: green !important; stroke-width: 3 !important; }'}}%%
+```
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant confirmation_page as Confirmation page
+    participant waiting_page as Waiting page
+    participant receipt_controller as Receipt controller
+    participant file_download_controller as File download controller
+    confirmation_page-->>User: 👁️ Display "Download the file" link
+    User->>receipt_controller: 👇 Click on "Download the file" [GET]
+
+    alt File doesn't exist
+        receipt_controller-->>waiting_page: returns
+        waiting_page-->>User: 👁️ Display "Wait a few seconds and click that link to get the file"
+        rect rgba(172, 226, 225, 0.4)
+            activate waiting_page
+            loop
+                waiting_page->>receipt_controller: GET
+                alt File doesn't exist
+                    receipt_controller-->>waiting_page: Retry-After
+                    waiting_page->>waiting_page: ⏱️ Wait for the delay specified in Retry-After
+                else File exists
+                    receipt_controller-->>waiting_page: Content-Disposition: Attachment Location:/download
+                    waiting_page->>file_download_controller: GET
+                    file_download_controller-->>waiting_page :  📄 File
+                    waiting_page-->>User: 📄 File
+                end
+            end
+            deactivate waiting_page
+        end
+    else File exists
+        receipt_controller->>file_download_controller: Redirects to [with Location header]
+        file_download_controller-->>User : 📄 File
+    end
+```
 
 Once the waiting page is displayed, it starts polling the server to get information about the file.
 It keeps polling the same route as before using JS `fetch` function. We are moving from a space where the browser is the HTTP client to a world where we are creating our own client.
@@ -270,6 +383,35 @@ In a SPA, you probably wouldn’t want the user to move from the confirmation pa
 
 This is what this iteration is about. We want to stay on the confirmation page and avoid moving to the waiting page, even if the file is not there.
 
+```mermaid
+sequenceDiagram
+actor User
+participant confirmation_page as Confirmation page
+participant waiting_page as Waiting page
+participant receipt_controller as Receipt controller
+participant file_download_controller as File download controller
+confirmation_page-->>User: 👁️ Display "Download the file" link
+rect rgba(172, 226, 225, 0.4)
+User->>confirmation_page: 👇 Click on "Download the file" [GET]
+activate confirmation_page
+confirmation_page->>confirmation_page: 🔄 Display spinner
+confirmation_page->>receipt_controller: GET
+loop
+    alt File doesn't exist
+        receipt_controller-->>confirmation_page: Retry-After
+        confirmation_page->>confirmation_page: ⏱️ Wait for the delay specified in Retry-After
+        confirmation_page->>receipt_controller: GET
+    else File exists
+        receipt_controller-->>waiting_page: Content-Disposition: Attachment Location:/download
+        confirmation_page->>file_download_controller: GET
+        file_download_controller-->>confirmation_page :  📄 File
+        confirmation_page-->>User: 📄 File
+    end
+end
+confirmation_page->>confirmation_page: Hide spinner
+end
+```
+
 For this, we attach an event listener to the link, prevent it from moving to the next page, display a spinner, and start polling the `receipt` route.
 We keep the same logic as before and mostly the same JS code.
 If the response contains a `Retry-After` header, the file is not there yet, and a future request is scheduled.
@@ -310,3 +452,24 @@ If you’re working in a server-to-server mode, you could also use a webhook mec
 ## Resources
 
 [📺 Avoiding long running HTTP API requests. - Code Opinion](https://www.youtube.com/watch?v=2yUnY61zdAk)
+
+
+
+sequenceDiagram
+actor User
+participant confirmation_page as Confirmation page
+participant waiting_page as Waiting page
+participant receipt_controller as Receipt controller
+participant file_download_controller as File download controller
+User->>confirmation_page: 👇 Click on "Download the file"
+confirmation_page->>receipt_controller: GET
+alt File doesn't exists
+loop
+receipt_controller-->>waiting_page: Returns
+waiting_page-->>User: Display "Wait a few seconds and click that link to get the file"
+User->>receipt_controller: 👇 Click the link
+end
+else File already exists
+confirmation_page->>file_download_controller: Redirects to [with Location header]
+file_download_controller-->>User : 📄 File
+end
