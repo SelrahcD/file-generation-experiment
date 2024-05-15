@@ -95,6 +95,8 @@ git checkout main
 git checkout human-polling
 ```
 
+or [view on Github](https://github.com/SelrahcD/file-generation-experiment/blob/human-polling/index.js)
+
 **This iteration is super raw but really helps understand how this works as it requires the user to manually ask (and ask again, if needed) for the file.**
 Future iterations are just UX improvements on top of it.
 
@@ -154,6 +156,8 @@ Having a dedicated URL for the file will help the caching mechanisms detect that
 git checkout blinking-polling
 ```
 
+or [view on Github](https://github.com/SelrahcD/file-generation-experiment/blob/blinking-polling/index.js#L41)
+
 The next improvement introduced is to avoid the need for the user to click on the second link on the waiting page.
 
 
@@ -209,6 +213,8 @@ The two pieces of information don’t have to match.
 ```bash
 git checkout server-retry-after
 ```
+
+or [view on Github](https://github.com/SelrahcD/file-generation-experiment/blob/cc758cd7d5096bff552ac23925d7be0b8e979d52/index.js#L48-L115)
 
 The next improvement is to poll the server to see if the file has been created without reloading the page.
 Now is the time for JS to come into play.
@@ -289,6 +295,8 @@ In that case, it can increase the delay, using that tool as a back pressure mech
 git checkout clean-fetch-decorator
 ```
 
+or [view on Github](https://github.com/SelrahcD/file-generation-experiment/blob/clean-fetch-decorator/index.js#L50-L99)
+
 This iteration doesn’t bring any functional improvements, but cleans the code by bringing some functional composition.
 
 The JS code is refactored to have specific functions that are able to interpret an HTTP response and act accordingly.
@@ -310,6 +318,8 @@ The HTTP response handling logic is now contained in one place, and these functi
 ```bash
 git checkout spinner
 ```
+
+or [view on Github](https://github.com/SelrahcD/file-generation-experiment/blob/spinner/index.js#L9-L115)
 
 Let’s now move to the modern world of SPA.
 In a SPA, you probably wouldn’t want the user to move from the confirmation page to the waiting page if the file isn’t ready but displays a spinner.
