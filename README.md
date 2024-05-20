@@ -66,7 +66,7 @@ npm run clean-receipt
 ### There is no form
 
 Because there is no worker, there is no need to trigger the worker, which allows us to skip building the form.
-The confirmation page is the first page, served at the ‘/’ route.
+The confirmation page is the first page, served at the `/` route.
 In a real application, you are expected to see this page right after submitting the form.
 It displays a link to download a file.
 
